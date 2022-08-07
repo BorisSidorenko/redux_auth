@@ -1,20 +1,28 @@
 import { useRef, useState, useEffect } from "react"
-import { useNavigate } from 'react-router-dom'
-import { useDispatch } from "react-redux"
-import { setCredentials } from "./authSlice"
+import { useNavigate, useLocation } from 'react-router-dom'
+import { useDispatch, useSelector } from "react-redux"
+import { setCredentials, isAuthorized } from "./authSlice"
 import { useLoginMutation } from "./authApiSlice"
 import { Form, Button } from "react-bootstrap"
 
 const Login = () => {
+    const isAuth = useSelector(isAuthorized)
+    const navigate = useNavigate()
+    const location = useLocation()
+    const from = location.state?.from?.pathname || "/"
+
     const userRef = useRef()
     const errRef = useRef()
     const [user, setUser] = useState('')
     const [pwd, setPwd] = useState('')
     const [errMsg, setErrMsg] = useState('')
-    const navigate = useNavigate()
 
     const [login, { isLoading }] = useLoginMutation()
     const dispatch = useDispatch()
+
+    useEffect(() => {
+        if (isAuth) navigate(from, { replace: true })        
+    }, [isAuth, from, navigate])
 
     useEffect(() => {
         userRef.current.focus()
@@ -33,7 +41,7 @@ const Login = () => {
             dispatch(setCredentials({ ...userData, user }))
             setUser('')
             setPwd('')
-            navigate('/')
+            navigate(from, { replace: true })
         } catch (err) {
             if (!err?.response) {
                 setErrMsg('No server response')
